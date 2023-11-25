@@ -3,7 +3,6 @@ add_library(ast_defs ast.cpp)
 add_library(ast
   async_event_types.cpp
   attachpoint_parser.cpp
-  dibuilderbpf.cpp
   elf_parser.cpp
   int_parser.cpp
   irbuilderbpf.cpp
@@ -54,21 +53,31 @@ if (STATIC_LINKING)
       irreader
       mcjit
       option
-      orcjit)
+      orcjit
+      ${LLVM_TARGETS_TO_BUILD})
 
 
-  llvm_map_components_to_libnames(llvm_libs ${llvm_lib_names})
-
-  if(TARGET libclang_static)
-    target_link_libraries(ast libclang_static)
+  if(EMBED_USE_LLVM)
+    target_link_libraries(ast "-Wl,--start-group" ${CLANG_EMBEDDED_CMAKE_TARGETS} ${LLVM_EMBEDDED_CMAKE_TARGETS} "-Wl,--end-group")
   else()
-    # old LLVM versions don't export libclang_static in ClangTargets.cmake; fall back to
-    # libclang.a in that case
-    target_link_libraries(ast libclang.a)    
+    llvm_map_components_to_libnames(llvm_libs ${llvm_lib_names})
+
+    if(TARGET libclang_static)
+      target_link_libraries(ast libclang_static)
+    else()
+      # old LLVM versions don't export libclang_static in ClangTargets.cmake; fall back to
+      # libclang.a in that case
+      target_link_libraries(ast libclang.a)    
+    endif()
+
+    target_link_libraries(ast ${clang_libs})
+    target_link_libraries(ast ${llvm_libs})
   endif()
 
-  target_link_libraries(ast ${clang_libs})
-  target_link_libraries(ast ${llvm_libs})
+  if(STATIC_LIBC)
+    unlink_transitive_dependency("${CLANG_EXPORTED_TARGETS}" "LLVM")
+  endif()
+
 else()
   find_library(found_LLVM LLVM HINTS ${LLVM_LIBRARY_DIRS})
   if(found_LLVM)
