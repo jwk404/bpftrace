@@ -72,7 +72,7 @@ if(STATIC_LINKING)
   else()
     # old LLVM versions don't export libclang_static in ClangTargets.cmake; fall back to
     # libclang.a in that case
-    target_link_libraries(ast libclang.a)
+    target_link_libraries(ast libclang.a)    
   endif()
 
   target_link_libraries(ast ${clang_libs})
@@ -82,7 +82,7 @@ else()
   if(found_LLVM)
     target_link_libraries(ast LLVM)
   else()
-    llvm_map_components_to_libnames(_llvm_libs bpfcodegen ipo irreader mcjit orcjit)
+    llvm_map_components_to_libnames(_llvm_libs bpfcodegen ipo irreader mcjit orcjit ${LLVM_TARGETS_TO_BUILD})
     llvm_expand_dependencies(llvm_libs ${_llvm_libs})
     target_link_libraries(ast ${llvm_libs})
   endif()
