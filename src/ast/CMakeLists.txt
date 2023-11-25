@@ -28,9 +28,7 @@ add_dependencies(ast_defs parser)
 
 target_compile_definitions(ast PRIVATE ${BPFTRACE_FLAGS})
 
-if(STATIC_LINKING)
-  include(Util)
-
+if (STATIC_LINKING)
   set(clang_libs
       clangAST
       clangAnalysis
@@ -56,16 +54,10 @@ if(STATIC_LINKING)
       irreader
       mcjit
       option
-      orcjit
-      ${LLVM_TARGETS_TO_BUILD})
+      orcjit)
+
 
   llvm_map_components_to_libnames(llvm_libs ${llvm_lib_names})
-
-  # It's extremely unclear why the clang static libraries export link
-  # dependencies on the llvm and clang shared libraries. Regardless, we need
-  # this hack to remove them.
-  unlink_transitive_dependency("${CLANG_EXPORTED_TARGETS}" "LLVM")
-  unlink_transitive_dependency("${CLANG_EXPORTED_TARGETS}" "$<LINK_ONLY:clang-cpp>")
 
   if(TARGET libclang_static)
     target_link_libraries(ast libclang_static)
